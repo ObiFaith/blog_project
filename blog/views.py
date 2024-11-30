@@ -12,13 +12,7 @@ User = get_user_model()
 def signup(request):
   serializer = UserSerializer(data=request.data)
   if serializer.is_valid():
-    email = serializer.validated_data.get('email')
-    username = serializer.validated_data.get('username')
-    password = serializer.validated_data.get('password')
-    last_name = serializer.validated_data.get('last_name')
-    first_name = serializer.validated_data.get('first_name')
-
-    user = User.objects.create_user(email=email, username=username, password=password, first_name=first_name, last_name=last_name)
+    user = User.objects.create_user(**serializer.validated_data)
     login(request._request, user)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
   return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -26,16 +20,6 @@ def signup(request):
 @api_view(['POST'])
 def login(request):
   pass
-
-@api_view(['GET'])
-def users(request, format=None):
-  if request.method == 'GET':
-    # get users
-    users = User.objects.all()
-    # serialize users
-    serializer = UserSerializer(users, many=True)
-    # return serializer data as response
-    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def user(request, id, format=None):
