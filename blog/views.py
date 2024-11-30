@@ -4,18 +4,58 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from django.contrib.auth import login, get_user_model, authenticate, logout
 
-@api_view(['GET', 'POST'])
+User = get_user_model()
+
+@api_view(['POST'])
+def signup(request):
+  serializer = UserSerializer(data=request.data)
+  if serializer.is_valid():
+    email = serializer.validated_data.get('email')
+    username = serializer.validated_data.get('username')
+    password = serializer.validated_data.get('password')
+    last_name = serializer.validated_data.get('last_name')
+    first_name = serializer.validated_data.get('first_name')
+
+    user = User.objects.create_user(email=email, username=username, password=password, first_name=first_name, last_name=last_name)
+    login(request._request, user)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+  return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def login(request):
+  pass
+
+@api_view(['GET'])
 def users(request, format=None):
   if request.method == 'GET':
+    # get users
     users = User.objects.all()
+    # serialize users
     serializer = UserSerializer(users, many=True)
+    # return serializer data as response
     return Response(serializer.data, status=status.HTTP_200_OK)
-  pass
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def user(request, id, format=None):
-  pass
+  try:
+    user = User.objects.get(pk=id)
+  except User.DoesNotExist:
+    return Response({"error": "User not found!"}, status=status.HTTP_404_NOT_FOUND)
+
+  if request.method == "GET":
+    serializer = UserSerializer(user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+  elif request.method == "PUT":
+    serializer = UserSerializer(user, data=request.data)
+    if serializer.is_valid():
+      serializer.save()
+      return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+  elif request.method == "DELETE":
+    user.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['GET', 'POST'])
 def blogs(request, format=None):
@@ -57,8 +97,6 @@ def blog(request, id, format=None):
     # todo: authorize before deleting a blog
     blog.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
-
-
 
 @api_view(['GET', 'POST'])
 def comments(request, format=None):
