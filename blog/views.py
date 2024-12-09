@@ -66,13 +66,13 @@ def blogs(request, format=None):
     # return serializer data as response
     return Response(serializer.data, status=status.HTTP_200_OK)
   elif request.method == 'POST':
-    # todo: authorize before adding blogs
+    if not request.user.is_authenticated():
+      return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
     # deserialize and validate data from POST
     serializer = BlogSerializer(data=request.data)
     if serializer.is_valid():
       serializer.save()
       return Response(serializer.data, status=status.HTTP_201_CREATED)
-
     return Response({"error": "title, content, and user_id are all required"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -86,14 +86,16 @@ def blog(request, id, format=None):
     serializer = BlogSerializer(blog)
     return Response(serializer.data, status=status.HTTP_200_OK)
   elif request.method == 'PUT':
-    # todo: authorize before updating a blog
+    if not request.user.is_authenticated():
+      return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
     serializer = BlogSerializer(blog, data=request.data)
     if serializer.is_valid():
       serializer.save()
       return Response(serializer.data, status=status.HTTP_200_OK)
     return Response({"error": "title, content and user_id are all required"}, status=status.HTTP_400_BAD_REQUEST)
   elif request.method == 'DELETE':
-    # todo: authorize before deleting a blog
+    if not request.user.is_authenticated():
+      return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
     blog.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -126,13 +128,15 @@ def comment(request, id, format=None):
     serializer = CommentSerializer(comment)
     return Response(serializer.data, status=status.HTTP_200_OK)
   elif request.method == 'PUT':
-    # todo: only authorized users can modfiy a comment
+    if not request.user.is_authenticated():
+      return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
     serializer = CommentSerializer(comment, data=request.data)
     if serializer.is_valid():
       serializer.save()
       return Response(serializer.data, status=status.HTTP_200_OK)
     return Response({"error": "comment, blog_id and user_id are all required"}, status=status.HTTP_400_BAD_REQUEST)
   elif request.method == 'DELETE':
-    # todo: only authorized users can modfiy a comment
+    if not request.user.is_authenticated():
+      return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
     comment.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
