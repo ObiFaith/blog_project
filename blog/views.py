@@ -18,8 +18,23 @@ def signup(request):
   return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
-def login(request):
-  pass
+def login_view(request):
+  serializer = LoginSerializer(data=request.data)
+  if serializer.is_valid():
+    username = serializer.validated_data.get('username')
+    password = serializer.validated_data.get('password')
+
+    user = authenticate(request, username=username, password=password)
+    if user:
+      login(request._request, user)
+      return Response({"message": "Logged in successfully!"}, status=status.HTTP_200_OK)
+    return Response({"error": "Invalid credentials!"}, status=status.HTTP_400_BAD_REQUEST)
+  return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def logout_view(request):
+  logout(request)
+  return Response({"message": "Logged out successfully!"}, status=status.HTTP_200_OK)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def user(request, id, format=None):
@@ -58,7 +73,7 @@ def blogs(request, format=None):
       serializer.save()
       return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    return Response({ "error": "title, content, and user_id are all required"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"error": "title, content, and user_id are all required"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def blog(request, id, format=None):
@@ -76,7 +91,7 @@ def blog(request, id, format=None):
     if serializer.is_valid():
       serializer.save()
       return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response({ "error": "title, content and user_id are all required"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"error": "title, content and user_id are all required"}, status=status.HTTP_400_BAD_REQUEST)
   elif request.method == 'DELETE':
     # todo: authorize before deleting a blog
     blog.delete()
@@ -116,7 +131,7 @@ def comment(request, id, format=None):
     if serializer.is_valid():
       serializer.save()
       return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response({ "error": "comment, blog_id and user_id are all required"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"error": "comment, blog_id and user_id are all required"}, status=status.HTTP_400_BAD_REQUEST)
   elif request.method == 'DELETE':
     # todo: only authorized users can modfiy a comment
     comment.delete()

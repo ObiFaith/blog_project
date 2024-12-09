@@ -17,7 +17,11 @@ class BlogSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
-    fields = ['id', 'email', 'username', 'password', 'first_name', 'last_name']
+    fields = ['id', 'username', 'password', 'first_name', 'last_name']
     extra_kwargs = {
       'password': {'write_only': True},
     }
+
+class LoginSerializer(serializers.Serializer):
+  username = serializers.EmailField()
+  password = serializers.CharField(write_only=True)
